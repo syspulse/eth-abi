@@ -79,7 +79,7 @@ lazy val root =
     .settings(macroSettings)
     .settings(name := "root")
     .settings(publishSettings)
-    .aggregate(ethabi, codegen, examples)
+    .aggregate(ethabi, protocol, codegen, examples)
     .disablePlugins(sbtassembly.AssemblyPlugin)
 
 lazy val ethabi =
@@ -101,10 +101,30 @@ lazy val ethabi =
     .enablePlugins(spray.boilerplate.BoilerplatePlugin)
     .disablePlugins(sbtassembly.AssemblyPlugin)
 
+lazy val protocol =
+  Project(id = "protocol", base = file("protocol"))
+    .settings(commonSettings)
+    .dependsOn(ethabi)
+    .settings(macroSettings)
+    .settings(name := "protocol")
+    .settings(Dependencies.deps)
+    .settings(publishSettings)
+    .settings(addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full))
+    .settings(
+      unmanagedSourceDirectories in Compile += {
+        CrossVersion.partialVersion(scalaVersion.value) match {
+          case Some((2, n)) if n >= 13 => (scalaSource in Compile).value.getParentFile / "scala-2.13+"
+          case _                       => (scalaSource in Compile).value.getParentFile / "scala-2.13-"
+        }
+      }
+    )
+    //.enablePlugins(spray.boilerplate.BoilerplatePlugin)
+    .disablePlugins(sbtassembly.AssemblyPlugin)
+
 lazy val codegen =
   Project(id = "codegen", base = file("codegen"))
     .settings(commonSettings)
-    .dependsOn(ethabi)
+    .dependsOn(ethabi,protocol)
     .settings(Dependencies.codegenDeps)
     .settings(
       name := "codegen",
@@ -116,7 +136,7 @@ lazy val codegen =
 lazy val examples =
   Project(id = "examples", base = file("examples"))
     .settings(commonSettings)
-    .dependsOn(ethabi)
+    .dependsOn(ethabi,protocol)
     .disablePlugins(sbtassembly.AssemblyPlugin)
     .settings(
       name := "examples",
