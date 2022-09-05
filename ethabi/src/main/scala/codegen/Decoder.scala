@@ -26,12 +26,9 @@ object Decoder {
     (result, typeInfo)
   }
 
-  def decodeInput(json:String,function:String, encodedHex:String) = {
-    val result = decode[Seq[AbiDefinition]](json).getOrElse(Seq())
-
+  def decodeInput(json:String, function:String, input:String) = {
+    val defs = decode[Seq[AbiDefinition]](json).getOrElse(Seq())
     val selector = function
-    val encoded = encodedHex
-    val defs = result
     
     val abiDef = defs.filter(d => d.isFunction || d.isConstant).find(_.name.get == selector).get
     
@@ -43,7 +40,7 @@ object Decoder {
     def helper[T]: Option[T] = None
     
     val (_, encoders) = types.map(t => (t, helper[String])).map((encoder _).tupled).unzip
-    val (results, _) = TupleType.decode(Hex.hex2Bytes(encoded), 0, encoders)
+    val (results, _) = TupleType.decode(Hex.hex2Bytes(input), 0, encoders)
     val r = encoders.zip(results).map(p => Hex.bytes2Hex(p._1.encode(p._2)))
     r
   }  
