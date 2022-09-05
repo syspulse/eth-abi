@@ -88,6 +88,7 @@ lazy val ethabi =
     .settings(macroSettings)
     .settings(name := "ethabi")
     .settings(Dependencies.deps)
+    .settings(Dependencies.codegenDeps)
     .settings(publishSettings)
     .settings(addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full))
     .settings(
