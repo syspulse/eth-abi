@@ -19,9 +19,9 @@ object Codegen {
   private[codegen] def codeGen(abiFile: String, binFile: Option[String], packages: List[String], className: String): Pkg = {
 
     val abiFileHandler = Source.fromFile(abiFile)
-    val abiDefs = decode[Seq[AbiDefinition]](abiFileHandler.getLines.mkString).getOrElse(throw new RuntimeException("invalid abi format"))
+    val abiDefs = decode[Seq[AbiDefinition]](abiFileHandler.getLines().mkString).getOrElse(throw new RuntimeException("invalid abi format"))
     val binFileHandler = binFile.map(f => Source.fromFile(f))
-    val binCodeStr = binFileHandler.map(_.getLines.mkString).getOrElse("")
+    val binCodeStr = binFileHandler.map(_.getLines().mkString).getOrElse("")
 
     abiFileHandler.close()
     binFileHandler.foreach(_.close())

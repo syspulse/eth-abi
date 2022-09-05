@@ -146,7 +146,7 @@ private[codegen] object Repl {
   private def readHistory(): Seq[String] = {
     if (Files.exists(Paths.get(historyPath))) {
       val source = Source.fromFile(historyPath)
-      val history = source.getLines.toList
+      val history = source.getLines().toList
       source.close()
       history
     } else {
@@ -203,7 +203,7 @@ private[codegen] object Repl {
         case c => Console.UNDERLINED + c + Console.RESET
       }
       // and highlight the selection
-      val ansiBuffer = fansi.Str(hl(buffer))
+      val ansiBuffer = fansi.Str(hl(buffer).mkString)
       val (newBuffer, cursorOffset) = GUILikeFilters.SelectionFilter.mangleBuffer(
         selection, ansiBuffer, cursor, fansi.Reversed.On
       )

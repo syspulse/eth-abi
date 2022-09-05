@@ -1,7 +1,7 @@
 import sbtassembly.AssemblyPlugin.defaultShellScript
 
 lazy val scala212 = "2.12.8"
-lazy val scala213 = "2.13.1"
+lazy val scala213 = "2.13.6"
 lazy val ethAbiVersion = "0.3.0"
 
 def scalacOptionByVersion(version: String): Seq[String] = {
@@ -14,6 +14,7 @@ def scalacOptionByVersion(version: String): Seq[String] = {
     "utf8",
     "-Xfatal-warnings",
     "-Xlint",
+    "-Xlint:-byname-implicit",    
     "-deprecation",
     "-unchecked",
     "-language:implicitConversions",
@@ -90,7 +91,7 @@ lazy val ethabi =
     .settings(Dependencies.deps)
     .settings(Dependencies.codegenDeps)
     .settings(publishSettings)
-    .settings(addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full))
+    .settings(addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full))
     .settings(
       unmanagedSourceDirectories in Compile += {
         CrossVersion.partialVersion(scalaVersion.value) match {
@@ -110,7 +111,7 @@ lazy val protocol =
     .settings(name := "protocol")
     .settings(Dependencies.deps)
     .settings(publishSettings)
-    .settings(addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full))
+    .settings(addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full))
     .settings(
       unmanagedSourceDirectories in Compile += {
         CrossVersion.partialVersion(scalaVersion.value) match {
