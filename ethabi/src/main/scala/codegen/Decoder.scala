@@ -7,6 +7,9 @@ import ethabi.util.Hex
 import ethabi.types.TupleType
 import ethabi.types.SolType
 import ethabi.types.TypeInfo
+import scala.util.Failure
+import scala.util.Try
+import scala.util.Success
 
 object Decoder {
   import scala.reflect.runtime
@@ -26,38 +29,53 @@ object Decoder {
     (result, typeInfo)
   }
 
-  def decodeInput(json:String, function:String, input:String) = {
-    val defs = decode[Seq[AbiDefinition]](json).getOrElse(Seq())
+  def loadAbi(json:String) = {
+    decode[Seq[AbiDefinition]](json).getOrElse(Seq())
+  }
+
+  def decodeFromJson(json:String, function:String, input:String) = {
+    val defs = loadAbi(json)
+    decodeInput(defs,function,input)
+  }
+
+  def decodeInput(defs:Seq[AbiDefinition], function:String, input:String):Try[Seq[(String,String,Any)]] = {  
     val selector = function
     
-    val abiDef = defs.filter(d => d.isFunction || d.isConstant).find(_.name.get == selector).get
+    val abiDef = defs.filter(d => d.isFunction || d.isConstant).find(_.name.get == selector)
     
-    //if (abiDef.outputs.get.exists(_.isTupleTpe)) throw new Exception("tuple type unsupported now")
+    if(!abiDef.isDefined) return Failure(new Exception(s"selector '${selector}' not found"))
     
-    //val types = abiDef.outputs.get.map(_.tpe.toString)
-    val (types,names) = abiDef.inputs.get.map(t => (t.tpe.toString,t.name)).unzip
+    try {
+      //if (abiDef.outputs.get.exists(_.isTupleTpe)) throw new Exception("tuple type unsupported now")    
+      //val types = abiDef.outputs.get.map(_.tpe.toString)
+      val (types,names) = abiDef.get.inputs.get.map(t => (t.tpe.toString,t.name)).unzip
+        
+      def helper[T]: Option[T] = None
       
-    def helper[T]: Option[T] = None
-    
-    val (_, encoders) = types.map(t => (t, helper[String])).map((encoder _).tupled).unzip
-    val (results, _) = TupleType.decode(Hex.hex2Bytes(input), 0, encoders)
-    val r = encoders.zip(results).zip(names).map(p => {
-      val n = p._2
-      val t = p._1._1.name
-      val v = p._1._1.encode(p._1._2)
+      val (_, encoders) = types.map(t => (t, helper[String])).map((encoder _).tupled).unzip
+      val (results, _) = TupleType.decode(Hex.hex2Bytes(input), 0, encoders)
+      val r = encoders.zip(results).zip(names).map(p => {
+        val n = p._2
+        val t = p._1._1.name
+        val v = p._1._1.encode(p._1._2)
 
-      val (name,typ,value) = t match {
-        case "address" => (n,t,Hex.bytes2Hex(v.takeRight(20),true))
-        case "uint256" | "int256" => (n,t,BigInt(v))
-        case "uint32" => (n,t,BigInt(v).toLong)
-        case "int32" => (n,t,BigInt(v).toInt)
-        case "uint8" => (n,t,BigInt(v).toInt)
-        case "int8" => (n,t,BigInt(v).toByte.toInt)
-        case _ => (n,t,v)
-      }
-      
-      (name, typ, value)
-    })
-    r
-  }  
+        val (name,typ,value) = t match {
+          case "address" => (n,t,Hex.bytes2Hex(v.takeRight(20),true))
+          case "uint256" | "int256" => (n,t,BigInt(v))
+          case "uint32" => (n,t,BigInt(v).toLong)
+          case "int32" => (n,t,BigInt(v).toInt)
+          case "uint8" => (n,t,BigInt(v).toInt)
+          case "int8" => (n,t,BigInt(v).toByte.toInt)
+          case _ => (n,t,v)
+        }
+        
+        (name, typ, value)
+      })
+      Success(r)
+    } catch {
+      case e:Exception => Failure(e)
+      case e:AssertionError => Failure(e)
+      case e:Error => Failure(e)
+    } 
+  }
 }
