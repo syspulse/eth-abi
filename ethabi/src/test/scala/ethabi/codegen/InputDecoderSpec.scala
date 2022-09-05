@@ -15,7 +15,7 @@ class InputDecoderSpec extends AnyWordSpec with Matchers {
     //info(s"${r.mkString("(", ", ", ")")}")
     info(s"$r")
     r.size shouldBe (2)
-    r(0).toString shouldBe "(dst,address,0x000000000000000000000000f6bdeb12aba8bf4cfbfc2a60c805209002223e22)"
+    r(0).toString shouldBe "(dst,address,0xf6bdeb12aba8bf4cfbfc2a60c805209002223e22)"
     r(1).toString shouldBe "(rawAmount,uint256,104170000000000000000)"
   }
 }

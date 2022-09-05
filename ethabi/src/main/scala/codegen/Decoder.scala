@@ -47,8 +47,12 @@ object Decoder {
       val v = p._1._1.encode(p._1._2)
 
       val (name,typ,value) = t match {
-        case "address" => (n,t,Hex.bytes2Hex(v,true))
-        case "uint256" => (n,t,BigInt(v))
+        case "address" => (n,t,Hex.bytes2Hex(v.takeRight(20),true))
+        case "uint256" | "int256" => (n,t,BigInt(v))
+        case "uint32" => (n,t,BigInt(v).toLong)
+        case "int32" => (n,t,BigInt(v).toInt)
+        case "uint8" => (n,t,BigInt(v).toInt)
+        case "int8" => (n,t,BigInt(v).toByte.toInt)
         case _ => (n,t,v)
       }
       
