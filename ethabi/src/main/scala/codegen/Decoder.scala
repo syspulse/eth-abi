@@ -32,16 +32,28 @@ object Decoder {
     
     val abiDef = defs.filter(d => d.isFunction || d.isConstant).find(_.name.get == selector).get
     
-    if (abiDef.outputs.get.exists(_.isTupleTpe)) throw new Exception("tuple type unsupported now")
+    //if (abiDef.outputs.get.exists(_.isTupleTpe)) throw new Exception("tuple type unsupported now")
     
     //val types = abiDef.outputs.get.map(_.tpe.toString)
-    val types = abiDef.inputs.get.map(_.tpe.toString)
+    val (types,names) = abiDef.inputs.get.map(t => (t.tpe.toString,t.name)).unzip
       
     def helper[T]: Option[T] = None
     
     val (_, encoders) = types.map(t => (t, helper[String])).map((encoder _).tupled).unzip
     val (results, _) = TupleType.decode(Hex.hex2Bytes(input), 0, encoders)
-    val r = encoders.zip(results).map(p => Hex.bytes2Hex(p._1.encode(p._2)))
+    val r = encoders.zip(results).zip(names).map(p => {
+      val n = p._2
+      val t = p._1._1.name
+      val v = p._1._1.encode(p._1._2)
+
+      val (name,typ,value) = t match {
+        case "address" => (n,t,Hex.bytes2Hex(v,true))
+        case "uint256" => (n,t,BigInt(v))
+        case _ => (n,t,v)
+      }
+      
+      (name, typ, value)
+    })
     r
   }  
 }
