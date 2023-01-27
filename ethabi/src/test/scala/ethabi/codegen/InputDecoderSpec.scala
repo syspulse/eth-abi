@@ -56,8 +56,8 @@ class InputDecoderSpec extends AnyWordSpec with Matchers {
     val json1 = Source.fromResource("UNI-abi.json").getLines().mkString("\n") //abi
     val json2 = Source.fromResource("USDT-abi.json").getLines().mkString("\n") //abi
     
-    val defs1 = Decoder.loadAbi(json1)
-    val defs2 = Decoder.loadAbi(json2)
+    val defs1 = Decoder.loadAbi(json1).get
+    val defs2 = Decoder.loadAbi(json2).get
 
     val sig1 = defs1.filter(d => d.isFunction).find(_.name.get == "transfer")
     val sig2 = defs2.filter(d => d.isFunction).find(_.name.get == "transfer")
@@ -102,7 +102,7 @@ class InputDecoderSpec extends AnyWordSpec with Matchers {
       // "0x00000000000000000000000080a25bb487e89e79599c9acae6dbc6b8a5f1bcdc", 
       // "0x0000000000000000000000000000000000000000000000000000000000000703"
       //]
-    val abi = Decoder.loadAbi(Source.fromResource("USDT-abi.json").getLines().mkString("\n"))
+    val abi = Decoder.loadAbi(Source.fromResource("USDT-abi.json").getLines().mkString("\n")).get
     val selector = "Transfer"
     val topics = Seq( 
       "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",

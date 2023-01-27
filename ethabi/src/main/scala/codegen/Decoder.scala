@@ -30,12 +30,16 @@ object Decoder {
   }
 
   def loadAbi(json:String) = {
-    decode[Seq[AbiDefinition]](json).getOrElse(Seq())
+    decode[Seq[AbiDefinition]](json) match {
+      case Left(e) => Failure(e)
+      case Right(r) => Success(r)
+    }
   }
 
   def decodeFromJson(json:String, function:String, input:String) = {
-    val defs = loadAbi(json)
-    decodeInput(defs,function,input)
+    loadAbi(json).flatMap(defs =>
+      decodeInput(defs,function,input)
+    )
   }
 
   def decodeEvent(defs:Seq[AbiDefinition], event:String, input:String):Try[Seq[(String,String,Any)]] = 
