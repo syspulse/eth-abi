@@ -38,10 +38,18 @@ object Decoder {
     decodeInput(defs,function,input)
   }
 
-  def decodeInput(defs:Seq[AbiDefinition], function:String, input:String):Try[Seq[(String,String,Any)]] = {  
-    val selector = function
+  def decodeEvent(defs:Seq[AbiDefinition], event:String, input:String):Try[Seq[(String,String,Any)]] = 
+    decodeData(defs,event,(d) => {d.isEvent},input)
+
+  def decodeFunction(defs:Seq[AbiDefinition], function:String, input:String):Try[Seq[(String,String,Any)]] = 
+    decodeData(defs,function,(d) => {d.isFunction || d.isConstant},input)  
+
+  def decodeInput(defs:Seq[AbiDefinition], function:String, input:String):Try[Seq[(String,String,Any)]] = 
+    decodeFunction(defs,function,input)
+
+  def decodeData(defs:Seq[AbiDefinition], selector:String, filter:(AbiDefinition)=>Boolean, input:String):Try[Seq[(String,String,Any)]] = {  
     
-    val abiDef = defs.filter(d => d.isFunction || d.isConstant).find(_.name.get == selector)
+    val abiDef = defs.filter(filter).find(_.name.get == selector)
     
     if(!abiDef.isDefined) return Failure(new Exception(s"selector '${selector}' not found"))
     
