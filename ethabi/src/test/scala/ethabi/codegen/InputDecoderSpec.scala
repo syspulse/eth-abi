@@ -125,4 +125,26 @@ class InputDecoderSpec extends AnyWordSpec with Matchers {
     //s(1).toString shouldBe "(_value,uint256,100000000)"
   }
 
+  "test USDT event Transfer(address,address,uint256)" in {
+    val abi = Decoder.loadAbi(Source.fromResource("USDT-abi.json").getLines().mkString("\n")).get
+    val selector = "Transfer(address,address,uint256)"
+    val topics = Seq( 
+      "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+      "0x000000000000000000000000cdbb7436f9d4c21b7627065d1556db29597981f4",
+      "0x00000000000000000000000080a25bb487e89e79599c9acae6dbc6b8a5f1bcdc", 
+      "0x0000000000000000000000000000000000000000000000000000000000000703"
+    )
+      
+    val data = topics.drop(1).map(_.drop(2))
+    val encoded = data.mkString("")
+    info(s"$encoded")
+
+    val r = Decoder.decodeEvent(abi,selector,encoded)
+    info(s"$r")
+
+    val s = r.get
+
+    s.size shouldBe (3)
+  }
+
 }

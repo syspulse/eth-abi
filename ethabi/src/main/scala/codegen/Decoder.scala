@@ -51,9 +51,30 @@ object Decoder {
   def decodeInput(defs:Seq[AbiDefinition], function:String, input:String):Try[Seq[(String,String,Any)]] = 
     decodeFunction(defs,function,input)
 
+  def toSig(abiDef:AbiDefinition) = {
+    abiDef.`type` match {
+      case "event" =>
+        val name = abiDef.name.getOrElse("")
+        val params = abiDef.inputs.get.map(p => s"${p.`type`}").mkString(",")
+        s"${name}($params)"
+      case "function" =>
+        // https://docs.soliditylang.org/en/v0.8.17/abi-spec.html
+        // The return type of a function is not part of this signature.
+        val name = abiDef.name.getOrElse("")
+        val params = abiDef.inputs.get.map(p => s"${p.`type`}").mkString(",")
+        s"${name}($params)"
+      case _ => ""
+    }    
+  }
+
   def decodeData(defs:Seq[AbiDefinition], selector:String, filter:(AbiDefinition)=>Boolean, input:String):Try[Seq[(String,String,Any)]] = {  
     
-    val abiDef = defs.filter(filter).find(_.name.get == selector)
+    val abiDef = defs
+      .filter(filter)
+      .find(ad => 
+        (ad.name.get == selector) || 
+        (toSig(ad) == selector)
+      )
     
     if(!abiDef.isDefined) return Failure(new Exception(s"selector '${selector}' not found"))
     
